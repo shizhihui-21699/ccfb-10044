@@ -1,0 +1,46 @@
+name: firmware-hardening
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build fw-harden
+        working-directory: fw-harden
+        run: cargo build --release
+
+      - name: Scan firmware (new revision)
+        working-directory: fw-harden
+        run: |
+          ./target/release/fw-harden scan "${FIRMWARE_DIR}" \
+            --json scan.json \
+            --sarif scan.sarif \
+            --fail-on high
+        env:
+          # Check out / extract the firmware under test to this path first.
+          FIRMWARE_DIR: firmware/new
+
+      - name: Compare against accepted baseline
+        if: always()
+        working-directory: fw-harden
+        run: |
+          if [ -f firmware/baseline/scan.json ]; then
+            ./target/release/fw-harden diff firmware/baseline/scan.json scan.json \
+              --sarif diff.sarif \
+              --fail-on high
+          fi
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: |
+            fw-harden/scan.sarif
+            fw-harden/diff.sarif
+          category: fw-harden

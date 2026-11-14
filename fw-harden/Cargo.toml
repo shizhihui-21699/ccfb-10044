@@ -1,0 +1,27 @@
+[package]
+name = "fw-harden"
+version = "0.1.0"
+edition = "2021"
+description = "Firmware ELF hardening & dangerous-import auditor (PIE/NX/RELRO/SSP/FORTIFY), with SARIF/JSON output and version diffing"
+license = "MIT"
+
+[[bin]]
+name = "fw-harden"
+path = "src/main.rs"
+
+[lib]
+name = "fw_harden"
+path = "src/lib.rs"
+
+[dependencies]
+goblin = "0.10"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+walkdir = "2"
+anyhow = "1"
+sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[dev-dependencies]
+tempfile = "3"
